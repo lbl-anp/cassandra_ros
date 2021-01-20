@@ -2,26 +2,26 @@
 # -*- coding: utf-8 -*-
 import roslib; roslib.load_manifest("cassandra_ros")
 import rospy
-import pycassa
+from cassandra.cluster import Cluster
 
 class Cassandra():
     def __init__(self, host="localhost", port=9160):
         self.host       = host
         self.port       = port
-                
+
+        self.cluster = Cluster([str(self.host)], port=str(self.port))
+
         self.sysManager = pycassa.SystemManager(str(self.host)+":"+str(self.port), framed_transport=True, timeout=30)
-        
-    def createKeyspace(self, keyspace=False,
-                               replication_strategy='SimpleStrategy',
-                               strategy_options={'replication_factor': '1'}):
+
+    def createKeyspace(self, keyspace=None):
         try:
-            if keyspace == False:
+            if keyspace is False:
                 keyspace = self.keyspace
             self.sysManager.create_keyspace(keyspace, replication_strategy, strategy_options)
         except:
             return False
         return True
-    
+
     def dropKeyspace(self, keyspace=False):
         try:
             if keyspace == False:
@@ -30,7 +30,7 @@ class Cassandra():
         except:
             return False
         return True
-    
+
     def existKeyspace(self, keyspace=False):
         try:
             if keyspace == False:
@@ -40,7 +40,7 @@ class Cassandra():
         except:
             pass
         return False
-    
+
     def getColumnComment(self, col_name, keyspace=False):
         try:
             if keyspace == False:
@@ -50,7 +50,7 @@ class Cassandra():
         except:
             pass
         return False
-    
+
     def getAllColumns(self, keyspace=False):
         try:
             if keyspace == False:
@@ -60,7 +60,7 @@ class Cassandra():
         except:
             pass
         return False
-    
+
     def setColumnComment(self, col_name, comment, keyspace=False):
         try:
             if keyspace == False:
@@ -70,7 +70,7 @@ class Cassandra():
         except:
             pass
         return False
-        
+
     def createColumn(self, col_name, super=False, column_validation_classes=None):#,compression_options={'sstable_compression':'SnappyCompressor','chunk_length_kb':'64'}):
         try:
             self.sysManager.create_column_family(self.keyspace,
@@ -84,14 +84,14 @@ class Cassandra():
         except:
             return False
         return True
-    
+
     def dropColumn(self, col_name):
         try:
             self.sysManager.drop_column_family(self.keyspace, col_name)
         except:
             return False
         return True
-    
+
     def existColumn(self, col_name, keyspace=False):
         try:
             if keyspace == False:
@@ -102,7 +102,7 @@ class Cassandra():
         except:
             pass
         return False
-    
+
     def typeOfColumn(self, col_name, keyspace=False):
         try:
             if keyspace == False:
@@ -112,26 +112,25 @@ class Cassandra():
         except:
             pass
         return False
-    
+
     def getColumn(self, col_name):
         try:
             return pycassa.ColumnFamily(self.pool, col_name)
         except:
             pass
         return False
-    
+
     def connectToKeyspace(self, keyspace="ros"):
-        self.keyspace   = keyspace
+        self.keyspace  = keyspace
         try:
             self.pool = pycassa.ConnectionPool(self.keyspace, [self.host + ":" + str(self.port)])
         except:
             return False
         return True
-        
+
     def disconnect(self):
         try:
             self.pool.dispose()
         except:
             return False
         return True
-        
